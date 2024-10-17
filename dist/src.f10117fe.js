@@ -127,12 +127,30 @@ exports.User = void 0;
 var User = /** @class */function () {
   function User(data) {
     this.data = data;
+    // All the keys in the event is a string and value of a Callback
+    this.events = {};
   }
   User.prototype.get = function (propName) {
     return this.data[propName];
   };
   User.prototype.set = function (update) {
     Object.assign(this.data, update);
+  };
+  User.prototype.on = function (eventName, callback) {
+    // Check if there is the same event name or if its undefined
+    var handlers = this.events[eventName] || [];
+    handlers.push(callback);
+    this.events[eventName] = handlers;
+  };
+  // Trigger all the callbacks in that eventName
+  User.prototype.trigger = function (eventName) {
+    var handlers = this.events[eventName];
+    if (!handlers || handlers.length === 0) {
+      return;
+    }
+    handlers.forEach(function (callback) {
+      callback();
+    });
   };
   return User;
 }();
@@ -148,11 +166,17 @@ var user = new User_1.User({
   name: "John",
   age: 10
 });
-user.set({
-  name: "newName"
+user.on("change", function () {
+  console.log("first chage");
 });
-console.log(user.get("name"));
-console.log(user.get("age"));
+user.on("change", function () {
+  console.log("second chage");
+});
+user.on("save", function () {
+  console.log("first save");
+});
+user.trigger("change");
+user.trigger("s");
 },{"./models/User":"src/models/User.ts"}],"../../../../.local/share/mise/installs/node/20.17.0/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
