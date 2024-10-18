@@ -126,16 +126,20 @@ Object.defineProperty(exports, "__esModule", {
 exports.Attributes = void 0;
 var Attributes = /** @class */function () {
   function Attributes(data) {
+    var _this = this;
     this.data = data;
+    // <K extends keyof T> - K can only ever be one of the different
+    // keys of T
+    // T[K] - take the type T and lookup the type K inside of it
+    this.get = function (key) {
+      return _this.data[key];
+    };
+    this.set = function (update) {
+      Object.assign(_this.data, update);
+    };
   }
-  // <K extends keyof T> - K can only ever be one of the different
-  // keys of T
-  // T[K] - take the type T and lookup the type K inside of it
-  Attributes.prototype.get = function (key) {
-    return this.data[key];
-  };
-  Attributes.prototype.set = function (update) {
-    Object.assign(this.data, update);
+  Attributes.prototype.getAll = function () {
+    return this.data;
   };
   return Attributes;
 }();
@@ -149,25 +153,26 @@ Object.defineProperty(exports, "__esModule", {
 exports.Eventing = void 0;
 var Eventing = /** @class */function () {
   function Eventing() {
+    var _this = this;
     // All the keys in the event is a string and value of a Callback
     this.events = {};
+    this.on = function (eventName, callback) {
+      // Check if there is the same event name or if its undefined
+      var handlers = _this.events[eventName] || [];
+      handlers.push(callback);
+      _this.events[eventName] = handlers;
+    };
+    // Trigger all the callbacks in that eventName
+    this.trigger = function (eventName) {
+      var handlers = _this.events[eventName];
+      if (!handlers || handlers.length === 0) {
+        return;
+      }
+      handlers.forEach(function (callback) {
+        callback();
+      });
+    };
   }
-  Eventing.prototype.on = function (eventName, callback) {
-    // Check if there is the same event name or if its undefined
-    var handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
-  };
-  // Trigger all the callbacks in that eventName
-  Eventing.prototype.trigger = function (eventName) {
-    var handlers = this.events[eventName];
-    if (!handlers || handlers.length === 0) {
-      return;
-    }
-    handlers.forEach(function (callback) {
-      callback();
-    });
-  };
   return Eventing;
 }();
 exports.Eventing = Eventing;
@@ -6186,6 +6191,50 @@ var User = /** @class */function () {
     this.sync = new Sync_1.Sync(rootUrl);
     this.attributes = new Attributes_1.Attributes(attrs);
   }
+  Object.defineProperty(User.prototype, "on", {
+    // Accessors
+    get: function get() {
+      return this.events.on;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "trigger", {
+    get: function get() {
+      return this.events.trigger;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "get", {
+    get: function get() {
+      return this.attributes.get;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  User.prototype.set = function (update) {
+    this.attributes.set(update);
+    this.events.trigger("change");
+  };
+  User.prototype.fetch = function () {
+    var _this = this;
+    var id = this.get("id");
+    if (typeof id !== "string") {
+      throw new Error("Cannot fetch without an id");
+    }
+    this.sync.fetch(id).then(function (response) {
+      _this.set(response.data);
+    });
+  };
+  User.prototype.save = function () {
+    var _this = this;
+    this.sync.save(this.attributes.getAll()).then(function (response) {
+      _this.trigger("save");
+    }).catch(function () {
+      _this.trigger("error");
+    });
+  };
   return User;
 }();
 exports.User = User;
@@ -6197,9 +6246,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 var User_1 = require("./models/User");
 var user = new User_1.User({
-  name: "new record",
+  id: "f5c3",
+  name: "newer name",
   age: 0
 });
+user.on("save", function () {
+  console.log(user);
+});
+user.save();
 },{"./models/User":"src/models/User.ts"}],"../../../../.local/share/mise/installs/node/20.17.0/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
