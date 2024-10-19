@@ -2,7 +2,10 @@ import { Model, HasId } from "../models/Model";
 export abstract class View<T extends Model<K>, K extends HasId> {
   regions: { [key: string]: Element } = {};
 
-  constructor(public parent: Element, public model: T) {
+  constructor(
+    public parent: Element,
+    public model: T,
+  ) {
     this.bindModel();
   }
 
